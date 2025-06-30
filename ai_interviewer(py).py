@@ -420,29 +420,109 @@ print("Sample Answer:", filtered_answer)
 
 from IPython.display import display, clear_output
 import ipywidgets as widgets
-import random
 import re
 
-# (Keep your existing role_questions dictionary here)
+# Define the role_questions dictionary with 10 roles and their questions
+role_questions = {
+    "Software Engineer": [
+        "Tell me about a challenging project you worked on.",
+        "Describe your experience with data structures and algorithms.",
+        "How do you handle technical debt in a project?",
+        "Explain the concept of RESTful APIs.",
+        "Describe a time you had to work with a difficult team member."
+    ],
+    "Data Scientist": [
+        "Explain the difference between supervised and unsupervised learning.",
+        "Describe a time you used machine learning to solve a real-world problem.",
+        "How do you handle missing data in a dataset?",
+        "Explain the concept of overfitting and how to avoid it.",
+        "Describe your experience with data visualization tools."
+    ],
+    "Product Manager": [
+        "How do you prioritize features for a product?",
+        "Describe a time you had to say no to a stakeholder.",
+        "How do you measure the success of a product?",
+        "Explain the concept of a Minimum Viable Product (MVP).",
+        "Describe a time you had to pivot on a product strategy."
+    ],
+    "Frontend Developer": [
+        "What is the virtual DOM?",
+        "Explain CSS specificity.",
+        "How do you optimize website performance?",
+        "Describe your experience with JavaScript frameworks.",
+        "What are web accessibility best practices?"
+    ],
+    "Backend Developer": [
+        "Explain REST vs GraphQL.",
+        "What is database normalization?",
+        "How do you ensure API security?",
+        "Describe a time you scaled a backend system.",
+        "How do you handle caching in your backend?"
+    ],
+    "AI Engineer": [
+        "What is a neural network?",
+        "How do you select a model architecture?",
+        "Describe a project using deep learning.",
+        "What is transfer learning?",
+        "Explain how backpropagation works."
+    ],
+    "DevOps Engineer": [
+        "What is CI/CD?",
+        "Describe a time you automated infrastructure.",
+        "How do you monitor system health?",
+        "Explain containerization.",
+        "What is infrastructure as code?"
+    ],
+    "UX Designer": [
+        "What is user-centered design?",
+        "How do you conduct user research?",
+        "Describe your design process.",
+        "What tools do you use for prototyping?",
+        "Explain accessibility in design."
+    ],
+    "Cybersecurity Analyst": [
+        "What is penetration testing?",
+        "How do you secure a network?",
+        "Describe the CIA triad.",
+        "What is threat modeling?",
+        "How do you respond to a security breach?"
+    ],
+    "Cloud Architect": [
+        "What is cloud scalability?",
+        "How do you design fault-tolerant systems?",
+        "Describe your experience with AWS/GCP/Azure.",
+        "What is serverless computing?",
+        "How do you optimize cloud costs?"
+    ]
+}
+
+# Define role-specific keywords
+role_keywords = {
+    "Software Engineer": ["project", "code", "bug", "algorithm", "design"],
+    "Data Scientist": ["data", "model", "analysis", "statistics", "predict"],
+    "Product Manager": ["stakeholder", "roadmap", "kpi", "mvp", "launch"],
+    "Frontend Developer": ["html", "css", "javascript", "dom", "responsive"],
+    "Backend Developer": ["api", "database", "cache", "server", "scalable"],
+    "AI Engineer": ["model", "neural", "train", "deep", "learning"],
+    "DevOps Engineer": ["ci/cd", "pipeline", "automation", "deployment", "infrastructure"],
+    "UX Designer": ["user", "prototype", "wireframe", "research", "interface"],
+    "Cybersecurity Analyst": ["vulnerability", "threat", "encryption", "attack", "breach"],
+    "Cloud Architect": ["cloud", "scalable", "aws", "gcp", "serverless"]
+}
 
 def start_interview():
     role_dropdown = widgets.Dropdown(options=list(role_questions.keys()), description='Job Role:')
     start_button = widgets.Button(description='Start Interview')
-    interview_container = widgets.Output()  # Container to hold the current interview
+    interview_container = widgets.Output()
 
     def on_start(b):
-        # Clear any previous interview
         interview_container.clear_output()
-
         selected_role = role_dropdown.value
         questions = role_questions[selected_role]
-
         with interview_container:
             ask_questions(selected_role, questions)
 
     start_button.on_click(on_start)
-
-    # Display the controls and empty container
     display(widgets.VBox([role_dropdown, start_button, interview_container]))
 
 def ask_questions(role, questions):
@@ -452,7 +532,6 @@ def ask_questions(role, questions):
     submit_button = widgets.Button(description='Submit Answer')
     total_score = {'score': 0}
 
-    # Container for this interview session
     interview_session = widgets.VBox([question_output, input_box, submit_button])
 
     def on_submit(b):
@@ -468,7 +547,6 @@ def ask_questions(role, questions):
                 print(questions[current_index])
             else:
                 print(f"Interview completed. Total Score: {min(total_score['score'], 100)}/100")
-                # Disable further submissions
                 submit_button.disabled = True
                 input_box.disabled = True
 
@@ -478,12 +556,25 @@ def ask_questions(role, questions):
     display(interview_session)
     submit_button.on_click(on_submit)
 
-# (Keep your existing score_answer function here)
+def score_answer(role, answer):
+    keywords = role_keywords.get(role, [])
+    score = 0
+
+    # Length factor: up to 30 points based on number of words
+    num_words = len(answer.strip().split())
+    if num_words >= 10:
+        score += 30
+    else:
+        score += num_words * 3  # partial credit
+
+    # Keyword factor: 10 points per matching keyword
+    ans_lower = answer.lower()
+    for kw in keywords:
+        if re.search(r'\\b' + re.escape(kw) + r'\\b', ans_lower):
+            score += 10
+
+    return min(score, 40)  # max per answer
 
 start_interview()
 
-model.save_pretrained('./fine_tuned_model')
-tokenizer.save_pretrained('./fine_tuned_model')
-
-!zip -r fine_tuned_model.zip fine_tuned_model
 
