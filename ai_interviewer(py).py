@@ -365,14 +365,6 @@ def tokenize_function(examples):
 tokenized_train = train_dataset.map(tokenize_function, batched=True)
 tokenized_eval = eval_dataset.map(tokenize_function, batched=True)
 
-# Remove the add_labels function as labels are added in tokenize_function
-# def add_labels(example):
-#     example['labels'] = example['input_ids']
-#     return example
-
-# tokenized_train = tokenized_train.map(add_labels)
-# tokenized_eval = tokenized_eval.map(add_labels)
-
 training_args = TrainingArguments(
     output_dir='./results',
     num_train_epochs=5,
