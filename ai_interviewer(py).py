@@ -422,7 +422,7 @@ from IPython.display import display, clear_output
 import ipywidgets as widgets
 import re
 
-# Define the role_questions dictionary with 10 roles and their questions
+# Questions for each role
 role_questions = {
     "Software Engineer": [
         "Tell me about a challenging project you worked on.",
@@ -496,7 +496,7 @@ role_questions = {
     ]
 }
 
-# Define role-specific keywords
+# Keywords for scoring
 role_keywords = {
     "Software Engineer": ["project", "code", "bug", "algorithm", "design"],
     "Data Scientist": ["data", "model", "analysis", "statistics", "predict"],
@@ -510,73 +510,80 @@ role_keywords = {
     "Cloud Architect": ["cloud", "scalable", "aws", "gcp", "serverless"]
 }
 
-# Scoring system
+# Smart responses based on keywords
+def interviewer_response(user_input):
+    user_input = user_input.lower()
+    if "your name" in user_input or "who are you" in user_input or "what are you" in user_input:
+        return "I'm an AI interviewer designed to simulate technical interviews."
+    elif "score" in user_input or "why did i get" in user_input:
+        return "Your score is based on answer length and use of key technical terms."
+    elif "feedback" in user_input or "improve" in user_input or "tip" in user_input:
+        return "To improve, try to provide detailed answers with technical keywords relevant to the role."
+    elif "interview" in user_input:
+        return "This interview was designed to mimic a real-world role-based assessment."
+    elif "get a job" in user_input or "land a job" in user_input:
+        return "You can apply through job boards like LinkedIn, Angellist, Internshala, or your network."
+    elif "skills" in user_input:
+        return "Key skills depend on the role. For tech roles, focus on data structures, projects, and communication."
+    elif "opportunities" in user_input:
+        return "Consider internships, freelance projects, and open source contributions to build your profile."
+    elif "how are you" in user_input:
+        return "I'm great, thank you! I'm here to help you prepare for interviews."
+    elif "what are you doing" in user_input:
+        return "I'm evaluating your interview responses and helping you improve."
+    elif "aspect" in user_input or "responsibility" in user_input:
+        return "Each role involves problem-solving, communication, and relevant technical or design skills."
+    elif "strength" in user_input or "weakness" in user_input:
+        return "Identify strengths relevant to your role and weaknesses you are actively improving."
+    elif "ai" in user_input and "future" in user_input:
+        return "AI is expected to greatly impact fields like healthcare, finance, transportation, and education."
+    elif "resume" in user_input:
+        return "Keep your resume concise, tailored to the job role, and highlight measurable achievements."
+    elif "project" in user_input:
+        return "Highlight your best projects with problems solved, tools used, and impact."
+    elif "question" in user_input and "interviewer" in user_input:
+        return "Ask about team culture, tech stack, challenges, or learning opportunities at the company."
+    elif "revolutionize" in user_input or "change the industry" in user_input:
+        return "AI will revolutionize the tech industry by automating tasks, personalizing services, and enhancing decision-making."
+    else:
+        return "AI Interviewer: That's an interesting question! I'll make a note of it for future improvements."
+
+# Scoring logic
 def score_answer(role, answer):
     keywords = role_keywords.get(role, [])
     score = 0
     num_words = len(answer.strip().split())
-    score += min(num_words * 3, 30)
-
+    score += 30 if num_words >= 10 else num_words * 3
     ans_lower = answer.lower()
     for kw in keywords:
         if re.search(r'\b' + re.escape(kw) + r'\b', ans_lower):
             score += 10
-
     return min(score, 40)
 
-# Respond to follow-up question
-def ai_interviewer_response(user_input):
-    user_input = user_input.lower()
+# Ask question at the end
+def ask_candidate_question():
+    followup_label = widgets.HTML("<b>Would you like to ask anything to the interviewer?</b>")
+    question_input = widgets.Textarea(placeholder="Type your question here...", layout=widgets.Layout(width='auto', height='80px'))
+    ask_button = widgets.Button(description="Ask")
+    response_output = widgets.Output()
 
-    if any(x in user_input for x in ["your name", "who are you", "what are you"]):
-        return "I'm an AI interviewer designed to simulate technical interviews and give feedback."
-    
-    elif any(x in user_input for x in ["score", "why did i get", "how did i do"]):
-        return "Your score is based on the length and technical quality of your answers."
-    
-    elif any(x in user_input for x in ["improve", "feedback", "tips", "how can i be better"]):
-        return "Focus on technical accuracy, structure your answers well, and use domain-specific terms."
+    def on_ask_click(b):
+        response_output.clear_output()
+        with response_output:
+            reply = interviewer_response(question_input.value.strip())
+            print("AI Interviewer:", reply)
 
-    elif any(x in user_input for x in ["job profile", "this role", "what skills", "role require"]):
-        return "This role requires a mix of domain expertise, problem-solving, and communication skills."
+    ask_button.on_click(on_ask_click)
+    display(widgets.VBox([followup_label, question_input, ask_button, response_output]))
 
-    elif any(x in user_input for x in ["opportunity", "look out for", "growth"]):
-        return "Keep exploring certifications, side projects, and internships aligned to your role."
-
-    elif any(x in user_input for x in ["ai", "artificial intelligence", "revolutionize", "future of tech"]):
-        return "AI is transforming automation, decision-making, personalization, and predictive analytics across industries."
-
-    elif any(x in user_input for x in ["resume", "cv", "how should my resume"]):
-        return "Keep your resume focused, include measurable achievements, and tailor it for each job role."
-
-    elif any(x in user_input for x in ["projects", "personal project", "side project"]):
-        return "Projects demonstrate your practical skills. Include your role, challenges faced, and outcomes."
-
-    elif any(x in user_input for x in ["interview", "mock", "this session"]):
-        return "This is a simulated role-specific interview. It's designed to mimic real-world scenarios."
-
-    elif any(x in user_input for x in ["open source", "contribution"]):
-        return "Start by fixing bugs or improving docs in beginner-friendly repos like those labeled 'good first issue'."
-
-    # More categories can be added similarly...
-
-    else:
-        return "That's a thoughtful question! I'll keep it in mind and aim to improve responses in the future."
-
-
-
-
-
-# Start asking interview questions
+# Interview process
 def ask_questions(role, questions):
     current_index = 0
-    total_score = {'score': 0}
-
     question_output = widgets.Output()
     input_box = widgets.Textarea(placeholder='Your answer...')
     submit_button = widgets.Button(description='Submit Answer')
-    display_area = widgets.VBox([question_output, input_box, submit_button])
-    display(display_area)
+    total_score = {'score': 0}
+    interview_session = widgets.VBox([question_output, input_box, submit_button])
 
     def on_submit(b):
         nonlocal current_index
@@ -584,55 +591,41 @@ def ask_questions(role, questions):
         total_score['score'] += score_answer(role, ans)
         current_index += 1
         input_box.value = ''
-
         question_output.clear_output()
         with question_output:
             if current_index < len(questions):
                 print(questions[current_index])
             else:
                 print(f"Interview completed. Total Score: {min(total_score['score'], 100)}/100")
-                input_box.layout.display = 'none'
+                submit_button.disabled = True
+                input_box.disabled = True
                 submit_button.layout.display = 'none'
-                followup_section()
-
-    def followup_section():
-        followup_input = widgets.Textarea(placeholder="Ask anything to the interviewer...")
-        followup_button = widgets.Button(description="Ask")
-        followup_output = widgets.Output()
-
-        def on_followup_click(btn):
-            followup_output.clear_output()
-            with followup_output:
-                response = ai_response(followup_input.value.strip())
-                print(f"AI Interviewer: {response}")
-
-        display(widgets.VBox([
-            widgets.Label("Would you like to ask anything to the interviewer?"),
-            followup_input, followup_button, followup_output
-        ]))
-
-        followup_button.on_click(on_followup_click)
+                input_box.layout.display = 'none'
+                ask_candidate_question()
 
     with question_output:
         print(questions[current_index])
+    display(interview_session)
     submit_button.on_click(on_submit)
 
-# Start the interview setup
+# Start the interface
 def start_interview():
     role_dropdown = widgets.Dropdown(options=list(role_questions.keys()), description='Job Role:')
     start_button = widgets.Button(description='Start Interview')
-    output_box = widgets.Output()
+    interview_container = widgets.Output()
 
     def on_start(b):
-        output_box.clear_output()
-        role = role_dropdown.value
-        questions = role_questions[role]
-        with output_box:
-            ask_questions(role, questions)
+        interview_container.clear_output()
+        selected_role = role_dropdown.value
+        questions = role_questions[selected_role]
+        with interview_container:
+            ask_questions(selected_role, questions)
 
     start_button.on_click(on_start)
-    display(widgets.VBox([role_dropdown, start_button, output_box]))
+    display(widgets.VBox([role_dropdown, start_button, interview_container]))
 
+# Run
 start_interview()
+
 
 
