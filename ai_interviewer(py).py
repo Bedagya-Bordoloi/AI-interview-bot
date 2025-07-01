@@ -525,52 +525,45 @@ def score_answer(role, answer):
     return min(score, 40)
 
 # Respond to follow-up question
-def ai_response(user_input):
+def ai_interviewer_response(user_input):
     user_input = user_input.lower()
+
+    if any(x in user_input for x in ["your name", "who are you", "what are you"]):
+        return "I'm an AI interviewer designed to simulate technical interviews and give feedback."
     
-    if "your name" in user_input or "who are you" in user_input:
-        return "I'm an AI interviewer designed to simulate technical interviews."
-    elif "what are you doing" in user_input or "purpose" in user_input:
-        return "I'm here to evaluate your responses and simulate a realistic interview experience."
-    elif "score" in user_input or "why did i get" in user_input:
-        return "Your score is based on the length and relevance of your answers, including technical keywords."
-    elif "feedback" in user_input or "how can i improve" in user_input:
-        return "To improve, focus on providing structured, detailed answers using job-specific terminology."
-    elif "interview" in user_input:
-        return "This interview is designed to mimic a real-world role-based assessment."
-    elif "tips" in user_input or "suggestion" in user_input:
-        return "Be clear, concise, and use real examples from your experience. Practice common questions."
-    elif "aspects" in user_input or "important in this role" in user_input:
-        return "Important aspects include technical skill, problem-solving ability, and communication."
-    elif "next step" in user_input or "what next" in user_input:
-        return "After this, you can review your answers and continue practicing to improve your score."
-    elif "how did i do" in user_input or "performance" in user_input:
-        return "You did well! With more detailed answers and keyword use, your score would increase."
-    elif "strength" in user_input:
-        return "Your strength is shown when you give specific, thoughtful responses."
-    elif "weakness" in user_input:
-        return "Work on elaborating your answers and using more domain-specific terminology."
-    elif "how to prepare" in user_input:
-        return "Review the fundamentals of the job role, and practice answering questions aloud."
-    elif "career advice" in user_input or "career path" in user_input:
-        return "Explore projects, internships, or certifications aligned with your interests."
-    elif "opportunities" in user_input or "what should i explore" in user_input:
-        return "Look into freelance work, open source contributions, and internship roles to build experience."
-    elif "resume" in user_input or "cv" in user_input:
-        return "Tailor your resume for the job role, emphasizing measurable achievements."
-    elif "common mistake" in user_input:
-        return "A common mistake is giving generic answers. Always relate to your experience."
-    elif "resources" in user_input or "where to learn" in user_input:
-        return "Try using Coursera, edX, and YouTube channels like freeCodeCamp for learning."
-    elif "projects" in user_input:
-        return "Work on personal or open source projects related to your job preference to stand out."
-    elif "mock interview" in user_input:
-        return "You can try platforms like Pramp or Interviewing.io for live mock interviews."
-    elif "recommendation" in user_input:
-        return "I recommend exploring job boards like LinkedIn, AngelList, and GitHub Jobs."
+    elif any(x in user_input for x in ["score", "why did i get", "how did i do"]):
+        return "Your score is based on the length and technical quality of your answers."
+    
+    elif any(x in user_input for x in ["improve", "feedback", "tips", "how can i be better"]):
+        return "Focus on technical accuracy, structure your answers well, and use domain-specific terms."
+
+    elif any(x in user_input for x in ["job profile", "this role", "what skills", "role require"]):
+        return "This role requires a mix of domain expertise, problem-solving, and communication skills."
+
+    elif any(x in user_input for x in ["opportunity", "look out for", "growth"]):
+        return "Keep exploring certifications, side projects, and internships aligned to your role."
+
+    elif any(x in user_input for x in ["ai", "artificial intelligence", "revolutionize", "future of tech"]):
+        return "AI is transforming automation, decision-making, personalization, and predictive analytics across industries."
+
+    elif any(x in user_input for x in ["resume", "cv", "how should my resume"]):
+        return "Keep your resume focused, include measurable achievements, and tailor it for each job role."
+
+    elif any(x in user_input for x in ["projects", "personal project", "side project"]):
+        return "Projects demonstrate your practical skills. Include your role, challenges faced, and outcomes."
+
+    elif any(x in user_input for x in ["interview", "mock", "this session"]):
+        return "This is a simulated role-specific interview. It's designed to mimic real-world scenarios."
+
+    elif any(x in user_input for x in ["open source", "contribution"]):
+        return "Start by fixing bugs or improving docs in beginner-friendly repos like those labeled 'good first issue'."
+
+    # More categories can be added similarly...
 
     else:
-        return "That's an interesting question! I'll make a note of it for future improvements."
+        return "That's a thoughtful question! I'll keep it in mind and aim to improve responses in the future."
+
+
 
 
 
