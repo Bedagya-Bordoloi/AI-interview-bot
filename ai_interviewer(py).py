@@ -510,29 +510,80 @@ role_keywords = {
     "Cloud Architect": ["cloud", "scalable", "aws", "gcp", "serverless"]
 }
 
-def start_interview():
-    role_dropdown = widgets.Dropdown(options=list(role_questions.keys()), description='Job Role:')
-    start_button = widgets.Button(description='Start Interview')
-    interview_container = widgets.Output()
+# Scoring system
+def score_answer(role, answer):
+    keywords = role_keywords.get(role, [])
+    score = 0
+    num_words = len(answer.strip().split())
+    score += min(num_words * 3, 30)
 
-    def on_start(b):
-        interview_container.clear_output()
-        selected_role = role_dropdown.value
-        questions = role_questions[selected_role]
-        with interview_container:
-            ask_questions(selected_role, questions)
+    ans_lower = answer.lower()
+    for kw in keywords:
+        if re.search(r'\b' + re.escape(kw) + r'\b', ans_lower):
+            score += 10
 
-    start_button.on_click(on_start)
-    display(widgets.VBox([role_dropdown, start_button, interview_container]))
+    return min(score, 40)
 
+# Respond to follow-up question
+def ai_response(user_input):
+    user_input = user_input.lower()
+    
+    if "your name" in user_input or "who are you" in user_input:
+        return "I'm an AI interviewer designed to simulate technical interviews."
+    elif "what are you doing" in user_input or "purpose" in user_input:
+        return "I'm here to evaluate your responses and simulate a realistic interview experience."
+    elif "score" in user_input or "why did i get" in user_input:
+        return "Your score is based on the length and relevance of your answers, including technical keywords."
+    elif "feedback" in user_input or "how can i improve" in user_input:
+        return "To improve, focus on providing structured, detailed answers using job-specific terminology."
+    elif "interview" in user_input:
+        return "This interview is designed to mimic a real-world role-based assessment."
+    elif "tips" in user_input or "suggestion" in user_input:
+        return "Be clear, concise, and use real examples from your experience. Practice common questions."
+    elif "aspects" in user_input or "important in this role" in user_input:
+        return "Important aspects include technical skill, problem-solving ability, and communication."
+    elif "next step" in user_input or "what next" in user_input:
+        return "After this, you can review your answers and continue practicing to improve your score."
+    elif "how did i do" in user_input or "performance" in user_input:
+        return "You did well! With more detailed answers and keyword use, your score would increase."
+    elif "strength" in user_input:
+        return "Your strength is shown when you give specific, thoughtful responses."
+    elif "weakness" in user_input:
+        return "Work on elaborating your answers and using more domain-specific terminology."
+    elif "how to prepare" in user_input:
+        return "Review the fundamentals of the job role, and practice answering questions aloud."
+    elif "career advice" in user_input or "career path" in user_input:
+        return "Explore projects, internships, or certifications aligned with your interests."
+    elif "opportunities" in user_input or "what should i explore" in user_input:
+        return "Look into freelance work, open source contributions, and internship roles to build experience."
+    elif "resume" in user_input or "cv" in user_input:
+        return "Tailor your resume for the job role, emphasizing measurable achievements."
+    elif "common mistake" in user_input:
+        return "A common mistake is giving generic answers. Always relate to your experience."
+    elif "resources" in user_input or "where to learn" in user_input:
+        return "Try using Coursera, edX, and YouTube channels like freeCodeCamp for learning."
+    elif "projects" in user_input:
+        return "Work on personal or open source projects related to your job preference to stand out."
+    elif "mock interview" in user_input:
+        return "You can try platforms like Pramp or Interviewing.io for live mock interviews."
+    elif "recommendation" in user_input:
+        return "I recommend exploring job boards like LinkedIn, AngelList, and GitHub Jobs."
+
+    else:
+        return "That's an interesting question! I'll make a note of it for future improvements."
+
+
+
+# Start asking interview questions
 def ask_questions(role, questions):
     current_index = 0
+    total_score = {'score': 0}
+
     question_output = widgets.Output()
     input_box = widgets.Textarea(placeholder='Your answer...')
     submit_button = widgets.Button(description='Submit Answer')
-    total_score = {'score': 0}
-
-    interview_session = widgets.VBox([question_output, input_box, submit_button])
+    display_area = widgets.VBox([question_output, input_box, submit_button])
+    display(display_area)
 
     def on_submit(b):
         nonlocal current_index
@@ -547,33 +598,47 @@ def ask_questions(role, questions):
                 print(questions[current_index])
             else:
                 print(f"Interview completed. Total Score: {min(total_score['score'], 100)}/100")
-                submit_button.disabled = True
-                input_box.disabled = True
+                input_box.layout.display = 'none'
+                submit_button.layout.display = 'none'
+                followup_section()
+
+    def followup_section():
+        followup_input = widgets.Textarea(placeholder="Ask anything to the interviewer...")
+        followup_button = widgets.Button(description="Ask")
+        followup_output = widgets.Output()
+
+        def on_followup_click(btn):
+            followup_output.clear_output()
+            with followup_output:
+                response = ai_response(followup_input.value.strip())
+                print(f"AI Interviewer: {response}")
+
+        display(widgets.VBox([
+            widgets.Label("Would you like to ask anything to the interviewer?"),
+            followup_input, followup_button, followup_output
+        ]))
+
+        followup_button.on_click(on_followup_click)
 
     with question_output:
         print(questions[current_index])
-
-    display(interview_session)
     submit_button.on_click(on_submit)
 
-def score_answer(role, answer):
-    keywords = role_keywords.get(role, [])
-    score = 0
+# Start the interview setup
+def start_interview():
+    role_dropdown = widgets.Dropdown(options=list(role_questions.keys()), description='Job Role:')
+    start_button = widgets.Button(description='Start Interview')
+    output_box = widgets.Output()
 
-    # Length factor: up to 30 points based on number of words
-    num_words = len(answer.strip().split())
-    if num_words >= 10:
-        score += 30
-    else:
-        score += num_words * 3  # partial credit
+    def on_start(b):
+        output_box.clear_output()
+        role = role_dropdown.value
+        questions = role_questions[role]
+        with output_box:
+            ask_questions(role, questions)
 
-    # Keyword factor: 10 points per matching keyword
-    ans_lower = answer.lower()
-    for kw in keywords:
-        if re.search(r'\\b' + re.escape(kw) + r'\\b', ans_lower):
-            score += 10
-
-    return min(score, 40)  # max per answer
+    start_button.on_click(on_start)
+    display(widgets.VBox([role_dropdown, start_button, output_box]))
 
 start_interview()
 
