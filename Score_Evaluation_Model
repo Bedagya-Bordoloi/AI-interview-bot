@@ -1,0 +1,356 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": [],
+      "authorship_tag": "ABX9TyP8B4Jc3Jd8xQ1J9Q2Qz9nU",
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/yourusername/yourrepo/blob/main/Score_Evaluation_Model_WandB.ipynb\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "# Score Evaluation Model with W&B Integration\n",
+        "\n",
+        "This notebook implements a score evaluation model using DistilBERT and integrates Weights & Biases for experiment tracking."
+      ],
+      "metadata": {
+        "id": "n1C-Jw2AIxwM"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "# Installation of Required Libraries"
+      ],
+      "metadata": {
+        "id": "HkZ8QZQzKv0P"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "!pip install transformers datasets evaluate pandas scikit-learn matplotlib seaborn wandb --quiet"
+      ],
+      "metadata": {
+        "id": "j8pyPNGbJCYE"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "# Import Libraries"
+      ],
+      "metadata": {
+        "id": "8D2Qmz5wK2m7"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "import pandas as pd\n",
+        "from datasets import Dataset\n",
+        "from transformers import AutoTokenizer, AutoModelForSequenceClassification, TrainingArguments, Trainer\n",
+        "import torch\n",
+        "import evaluate\n",
+        "import matplotlib.pyplot as plt\n",
+        "import seaborn as sns\n",
+        "from sklearn.metrics import mean_squared_error\n",
+        "import wandb\n",
+        "import numpy as np\n",
+        "from google.colab import files"
+      ],
+      "metadata": {
+        "id": "kQ_-AxDrUZ0I"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "# Initialize Weights & Biases"
+      ],
+      "metadata": {
+        "id": "hnyBDAyJTyGn"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "wandb.login()\n",
+        "\n",
+        "wandb.init(project=\"score-evaluation-model\", config={\n",
+        "    \"model_type\": \"distilbert-base-uncased\",\n",
+        "    \"batch_size\": 8,\n",
+        "    \"epochs\": 4,\n",
+        "    \"learning_rate\": 2e-5,\n",
+        "    \"test_size\": 0.1\n",
+        "})"
+      ],
+      "metadata": {
+        "id": "u5OWDFFRT44J"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "# Upload and Prepare Dataset"
+      ],
+      "metadata": {
+        "id": "tMMEIjQ2TJ-3"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Upload the scoring dataset\n",
+        "uploaded = files.upload()\n",
+        "df = pd.read_csv(list(uploaded.keys())[0]\n",
+        "\n",
+        "# Log dataset statistics to W&B\n",
+        "wandb.log({\n",
+        "    \"dataset_size\": len(df),\n",
+        "    \"score_distribution\": wandb.plot.histogram(wandb.Table(data=df, columns=[\"score\"]), \n",
+        "    \"sample_data\": wandb.Table(dataframe=df.head())\n",
+        "})\n",
+        "\n",
+        "# Format the input text\n",
+        "def format_row(row):\n",
+        "    return f\"[QUESTION] {row['question']} [IDEAL] {row['ideal_answer']} [USER] {row['user_answer']}\"\n",
+        "\n",
+        "df['input_text'] = df.apply(format_row, axis=1)\n",
+        "df['label'] = df['score'].astype(float)\n",
+        "\n",
+        "# Convert to Hugging Face dataset\n",
+        "dataset = Dataset.from_pandas(df[['input_text', 'label']])\n",
+        "dataset = dataset.train_test_split(test_size=wandb.config.test_size, seed=42)"
+      ],
+      "metadata": {
+        "id": "kQ_-AxDrUZ0I"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "# Tokenization"
+      ],
+      "metadata": {
+        "id": "igsb6ITbUWCN"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "tokenizer = AutoTokenizer.from_pretrained(wandb.config.model_type)\n",
+        "\n",
+        "def tokenize(example):\n",
+        "    return tokenizer(example['input_text'], truncation=True, padding=\"max_length\")\n",
+        "\n",
+        "tokenized = dataset.map(tokenize)"
+      ],
+      "metadata": {
+        "id": "kQ_-AxDrUZ0I"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "# Model Initialization"
+      ],
+      "metadata": {
+        "id": "Hisd3BVsUzVf"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "model = AutoModelForSequenceClassification.from_pretrained(\n",
+        "    wandb.config.model_type, \n",
+        "    num_labels=1\n",
+        ")"
+      ],
+      "metadata": {
+        "id": "XjUF1McMU9Bf"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "# Training Setup"
+      ],
+      "metadata": {
+        "id": "d2eMBineVhLI"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Compute metrics function for W&B logging\n",
+        "def compute_metrics(p):\n",
+        "    preds = p.predictions.flatten()\n",
+        "    labels = p.label_ids\n",
+        "    \n",
+        "    mse = mean_squared_error(labels, preds)\n",
+        "    rmse = np.sqrt(mse)\n",
+        "    \n",
+        "    wandb.log({\"eval_mse\": mse, \"eval_rmse\": rmse})\n",
+        "    \n",
+        "    return {\"mse\": mse, \"rmse\": rmse}\n",
+        "\n",
+        "# Training arguments\n",
+        "args = TrainingArguments(\n",
+        "    output_dir=\"score_model\",\n",
+        "    per_device_train_batch_size=wandb.config.batch_size,\n",
+        "    per_device_eval_batch_size=wandb.config.batch_size,\n",
+        "    num_train_epochs=wandb.config.epochs,\n",
+        "    eval_strategy=\"epoch\",\n",
+        "    save_strategy=\"epoch\",\n",
+        "    logging_dir=\"logs\",\n",
+        "    load_best_model_at_end=True,\n",
+        "    metric_for_best_model=\"eval_loss\",\n",
+        "    report_to=\"wandb\"  # Enable W&B logging\n",
+        ")\n",
+        "\n",
+        "# Initialize Trainer\n",
+        "trainer = Trainer(\n",
+        "    model=model,\n",
+        "    args=args,\n",
+        "    train_dataset=tokenized[\"train\"],\n",
+        "    eval_dataset=tokenized[\"test\"],\n",
+        "    tokenizer=tokenizer,\n",
+        "    compute_metrics=compute_metrics\n",
+        ")"
+      ],
+      "metadata": {
+        "id": "wQvIVFdpVsIL"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "# Training"
+      ],
+      "metadata": {
+        "id": "1xVb84WTV7uJ"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "trainer.train()"
+      ],
+      "metadata": {
+        "id": "BM7mD5QJV7UY"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "# Evaluation and Visualization"
+      ],
+      "metadata": {
+        "id": "5xVb84WTV7uJ"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Make predictions\n",
+        "predictions = trainer.predict(tokenized[\"test\"])\n",
+        "preds = predictions.predictions.flatten()\n",
+        "labels = predictions.label_ids\n",
+        "\n",
+        "# Create scatter plot\n",
+        "plt.figure(figsize=(8, 6))\n",
+        "sns.scatterplot(x=labels, y=preds, alpha=0.6)\n",
+        "plt.xlabel(\"True Score\")\n",
+        "plt.ylabel(\"Predicted Score\")\n",
+        "plt.title(\"True vs Predicted Scores on Validation Set\")\n",
+        "plt.grid(True)\n",
+        "\n",
+        "# Log plot to W&B\n",
+        "wandb.log({\"true_vs_predicted\": wandb.Image(plt)})\n",
+        "plt.show()\n",
+        "\n",
+        "# Log predictions table\n",
+        "wandb.log({\n",
+        "    \"predictions\": wandb.Table(\n",
+        "        columns=[\"True Score\", \"Predicted Score\"],\n",
+        "        data=list(zip(labels.tolist(), preds.tolist()))\n",
+        "})"
+      ],
+      "metadata": {
+        "id": "6xVb84WTV7uJ"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "# Save Model"
+      ],
+      "metadata": {
+        "id": "7xVb84WTV7uJ"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Save model and tokenizer\n",
+        "trainer.save_model(\"scoring_distilbert_model\")\n",
+        "tokenizer.save_pretrained(\"scoring_distilbert_model\")\n",
+        "\n",
+        "# Create zip file and download\n",
+        "!zip -r scoring_model.zip scoring_distilbert_model\n",
+        "\n",
+        "# Log model as artifact\n",
+        "artifact = wandb.Artifact('scoring_model', type='model')\n",
+        "artifact.add_file(\"scoring_model.zip\")\n",
+        "wandb.log_artifact(artifact)\n",
+        "\n",
+        "# Finish W&B run\n",
+        "wandb.finish()"
+      ],
+      "metadata": {
+        "id": "8xVb84WTV7uJ"
+      },
+      "execution_count": null,
+      "outputs": []
+    }
+  ]
+}
