@@ -1,10 +1,10 @@
-# AI Interview Bot
+# AIVice
 
 An AI-powered tool designed to simulate job interviews, providing users with realistic practice and feedback to improve their interviewing skills.  It uses job-specific questions from custom datasets, evaluates user responses, and provides a score out of 100.
 
 ## Introduction
 
-The AI Interview Bot is a Flask-based application that helps job seekers prepare for technical interviews. It leverages custom-made datasets of interview questions and a pre-trained DistilBERT model to evaluate user responses and provide constructive feedback. The bot simulates a real interview experience, asking questions tailored to the selected job role and offering a score and feedback on the user's answers. This tool aims to make the interview preparation process more efficient and effective.
+The AIVice is a Flask-based application that helps job seekers prepare for technical interviews. It leverages custom-made datasets of interview questions and a pre-trained DistilBERT model to evaluate user responses and provide constructive feedback. The bot simulates a real interview experience, asking questions tailored to the selected job role and offering a score and feedback on the user's answers. This tool aims to make the interview preparation process more efficient and effective.
 
 ## Features
 
