@@ -100,3 +100,6 @@
 * ➕ More job roles and datasets  
 * ✨ Improved UI with real-time feedback  
 * 🎯 Personalized question generation
+
+
+![AIVice Interface](Snaps/Snap1.png)
