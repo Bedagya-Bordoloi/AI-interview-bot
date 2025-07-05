@@ -103,9 +103,18 @@
 
 ## 📸 Snaps for the Website
 
-![AIVice Interface](Snaps/Snap1.png)
-![AIVice Interface](Snaps/Snap2.png)
-![AIVice Interface](Snaps/Snap3.png)
-![AIVice Interface](Snaps/Snap4.png)
-![AIVice Interface](Snaps/Snap5.png)
-![AIVice Interface](Snaps/Snap6.png)
+### 🏠 Homepage
+
+![AIVice Homepage](Snaps/Snap1.png)
+
+---
+
+### 💼 Choose Your Job Role
+
+![Choose Job Role](Snaps/Snap2.png)
+
+---
+
+### 🧑‍💻 Start Your Interview
+
+![Interview Chat Interface](Snaps/Snap6.png)
