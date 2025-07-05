@@ -49,11 +49,12 @@
 
 ## 🚀 Installation
 
-1. 🖥️ Clone the repository:
-```bash
-git clone https://github.com/Bedagya-Bordoloi/AI-interview-bot.git
-cd AI-interview-bot
-    ```
+## 🚀 Installation
+
+1. 🖥️ **Clone the repository:**
+   ```bash
+   git clone https://github.com/Bedagya-Bordoloi/AI-interview-bot.git
+   cd AI-interview-bot
 
 2.  **INSTALL DEPENDENCIES:**
     ```bash
