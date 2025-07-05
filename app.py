@@ -1,209 +1,159 @@
-from flask import Flask, request, jsonify
-import uuid
-import re
-
-app = Flask(__name__)
-
+from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
+from transformers import GPT2LMHeadModel, GPT2Tokenizer
+from transformers import DistilBertTokenizer, DistilBertForSequenceClassification
+import torch
+import pandas as pd
+import random
+import uuid
+
+app = Flask(__name__, template_folder="frontend", static_folder="static")
 CORS(app)
 
-role_questions = {
-    "Software Engineer": [
-        "Tell me about a challenging project you worked on.",
-        "Describe your experience with data structures and algorithms.",
-        "How do you handle technical debt in a project?",
-        "Explain the concept of RESTful APIs.",
-        "Describe a time you had to work with a difficult team member."
-    ],
-    "Data Scientist": [
-        "Explain the difference between supervised and unsupervised learning.",
-        "Describe a time you used machine learning to solve a real-world problem.",
-        "How do you handle missing data in a dataset?",
-        "Explain the concept of overfitting and how to avoid it.",
-        "Describe your experience with data visualization tools."
-    ],
-    "Product Manager": [
-        "How do you prioritize features for a product?",
-        "Describe a time you had to say no to a stakeholder.",
-        "How do you measure the success of a product?",
-        "Explain the concept of a Minimum Viable Product (MVP).",
-        "Describe a time you had to pivot on a product strategy."
-    ],
-    "Frontend Developer": [
-        "What is the virtual DOM?",
-        "Explain CSS specificity.",
-        "How do you optimize website performance?",
-        "Describe your experience with JavaScript frameworks.",
-        "What are web accessibility best practices?"
-    ],
-    "Backend Developer": [
-        "Explain REST vs GraphQL.",
-        "What is database normalization?",
-        "How do you ensure API security?",
-        "Describe a time you scaled a backend system.",
-        "How do you handle caching in your backend?"
-    ],
-    "AI Engineer": [
-        "What is a neural network?",
-        "How do you select a model architecture?",
-        "Describe a project using deep learning.",
-        "What is transfer learning?",
-        "Explain how backpropagation works."
-    ],
-    "DevOps Engineer": [
-        "What is CI/CD?",
-        "Describe a time you automated infrastructure.",
-        "How do you monitor system health?",
-        "Explain containerization.",
-        "What is infrastructure as code?"
-    ],
-    "UX Designer": [
-        "What is user-centered design?",
-        "How do you conduct user research?",
-        "Describe your design process.",
-        "What tools do you use for prototyping?",
-        "Explain accessibility in design."
-    ],
-    "Cybersecurity Analyst": [
-        "What is penetration testing?",
-        "How do you secure a network?",
-        "Describe the CIA triad.",
-        "What is threat modeling?",
-        "How do you respond to a security breach?"
-    ],
-    "Cloud Architect": [
-        "What is cloud scalability?",
-        "How do you design fault-tolerant systems?",
-        "Describe your experience with AWS/GCP/Azure.",
-        "What is serverless computing?",
-        "How do you optimize cloud costs?"
-    ]
-}
+interview_model_path = "./Interview_Model/gpt2-interviewer/checkpoint-250"
+interview_tokenizer = GPT2Tokenizer.from_pretrained(interview_model_path)
+interview_model = GPT2LMHeadModel.from_pretrained(interview_model_path)
 
-role_keywords = {
-    "Software Engineer": ["project", "code", "bug", "algorithm", "design"],
-    "Data Scientist": ["data", "model", "analysis", "statistics", "predict"],
-    "Product Manager": ["stakeholder", "roadmap", "kpi", "mvp", "launch"],
-    "Frontend Developer": ["html", "css", "javascript", "dom", "responsive"],
-    "Backend Developer": ["api", "database", "cache", "server", "scalable"],
-    "AI Engineer": ["model", "neural", "train", "deep", "learning"],
-    "DevOps Engineer": ["ci/cd", "pipeline", "automation", "deployment", "infrastructure"],
-    "UX Designer": ["user", "prototype", "wireframe", "research", "interface"],
-    "Cybersecurity Analyst": ["vulnerability", "threat", "encryption", "attack", "breach"],
-    "Cloud Architect": ["cloud", "scalable", "aws", "gcp", "serverless"]
-}
+score_model_path = "./Score_Evaluation_Model/scoring_distilbert_model"
+score_tokenizer = DistilBertTokenizer.from_pretrained(score_model_path)
+score_model = DistilBertForSequenceClassification.from_pretrained(score_model_path)
+score_model.eval()
+
+question_df = pd.read_csv("interview_questions1.csv").dropna()
+question_df['role'] = question_df['role'].str.strip().str.lower().str.replace(" ", "_")
+
 
 sessions = {}
 
-def score_answer(role, answer):
-    keywords = role_keywords.get(role, [])
-    score = 0
-    num_words = len(answer.strip().split())
-    score += 30 if num_words >= 10 else num_words * 3
-    ans_lower = answer.lower()
-    for kw in keywords:
-        if re.search(r'\b' + re.escape(kw) + r'\b', ans_lower):
-            score += 10
-    return min(score, 40)
+def evaluate_answer(answer):
+    inputs = score_tokenizer(answer, return_tensors="pt", truncation=True, padding=True)
+    with torch.no_grad():
+        outputs = score_model(**inputs)
+        score = outputs.logits.squeeze().item()
 
-def interviewer_response(user_input):
-    user_input = user_input.lower()
-    if "your name" in user_input or "who are you" in user_input or "what are you" in user_input:
-        return "I'm an AI interviewer designed to simulate technical interviews."
-    elif "score" in user_input or "why did i get" in user_input:
-        return "Your score is based on answer length and use of key technical terms."
-    elif "feedback" in user_input or "improve" in user_input or "tip" in user_input:
-        return "To improve, try to provide detailed answers with technical keywords relevant to the role."
-    elif "interview" in user_input:
-        return "This interview was designed to mimic a real-world role-based assessment."
-    elif "get a job" in user_input or "land a job" in user_input:
-        return "You can apply through job boards like LinkedIn, Angellist, Internshala, or your network."
-    elif "skills" in user_input:
-        return "Key skills depend on the role. For tech roles, focus on data structures, projects, and communication."
-    elif "opportunities" in user_input:
-        return "Consider internships, freelance projects, and open source contributions to build your profile."
-    elif "how are you" in user_input:
-        return "I'm great, thank you! I'm here to help you prepare for interviews."
-    elif "what are you doing" in user_input:
-        return "I'm evaluating your interview responses and helping you improve."
-    elif "aspect" in user_input or "responsibility" in user_input:
-        return "Each role involves problem-solving, communication, and relevant technical or design skills."
-    elif "strength" in user_input or "weakness" in user_input:
-        return "Identify strengths relevant to your role and weaknesses you are actively improving."
-    elif "ai" in user_input and "future" in user_input:
-        return "AI is expected to greatly impact fields like healthcare, finance, transportation, and education."
-    elif "resume" in user_input:
-        return "Keep your resume concise, tailored to the job role, and highlight measurable achievements."
-    elif "project" in user_input:
-        return "Highlight your best projects with problems solved, tools used, and impact."
-    elif "question" in user_input and "interviewer" in user_input:
-        return "Ask about team culture, tech stack, challenges, or learning opportunities at the company."
-    elif "revolutionize" in user_input or "change the industry" in user_input:
-        return "AI will revolutionize the tech industry by automating tasks, personalizing services, and enhancing decision-making."
+    score = round(max(0, min(100, score)))
+
+    if score >= 85:
+        feedback = "Excellent"
+    elif score >= 60:
+        feedback = "Good"
+    elif score >= 35:
+        feedback = "Average"
+    elif score >= 15:
+        feedback = "Weak"
     else:
-        return "AI Interviewer: That's an interesting question! I'll make a note of it for future improvements."
+        feedback = "Poor"
 
-@app.route('/api/interview', methods=['POST'])
+    return score, feedback
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/job_profile.html')
+def job_profile():
+    return render_template('job_profile.html')
+
+@app.route('/interviewbot.html')
+def interview_page():
+    role = request.args.get('role', 'software_engineer').lower()
+    return render_template('interviewbot.html', role=role)
+
+@app.route("/api/interview", methods=["POST"])
 def interview():
-    data = request.json
-    msg = data.get('message', '')
-    role = data.get('role')
-    session_id = data.get('session_id')
+    data = request.get_json()
+    user_msg = data.get("message", "").strip()
+    role = data.get("role", "").strip().lower().replace(" ", "_")  
+    session_id = data.get("session_id")
 
-    if not role or role not in role_questions:
-        return jsonify({"error": "Invalid or missing role"}), 400
+    print(f"📨 Incoming request: role={role}, session_id={session_id}, message='{user_msg}'")
 
-    if not session_id or session_id not in sessions:
+    if not session_id:
+        filtered_questions = question_df[question_df['role'] == role]['question'].tolist()
+        print(f"🔎 Role '{role}' matched {len(filtered_questions)} questions.")
+
+        if len(filtered_questions) == 0:
+            return jsonify({"error": f"No questions found for role '{role}'."}), 400
+
+        selected_questions = random.sample(filtered_questions, min(10, len(filtered_questions)))
+        
         session_id = str(uuid.uuid4())
         sessions[session_id] = {
             "role": role,
-            "current_q": 0,
+            "questions": selected_questions,
+            "asked": [],
             "answers": [],
-            "score": 0,
-            "phase": "interview"
+            "scores": [],
+            "feedbacks": [],
+            "current_index": 0,
+            "interview_done": False
         }
-        question = role_questions[role][0]
-        sessions[session_id]["current_q"] = 1
+        
+        first_question = selected_questions[0]
+        sessions[session_id]["asked"].append(first_question)
+        sessions[session_id]["current_index"] = 1
+
         return jsonify({
             "session_id": session_id,
-            "question": question,
-            "progress": f"1/{len(role_questions[role])}"
+            "question": first_question,
+            "message": f"Interview started for {role.replace('_', ' ')} role."
         })
 
-    session = sessions[session_id]
-    role = session["role"]
+    session = sessions.get(session_id)
+    if not session:
+        print(f"❌ Invalid session ID: {session_id}")
+        return jsonify({"error": "Invalid session ID"}), 400
 
-    if session["phase"] == "interview":
-        if session["current_q"] > 0:
-            session["answers"].append(msg)
-            session["score"] += score_answer(role, msg)
-        if session["current_q"] < len(role_questions[role]):
-            question = role_questions[role][session["current_q"]]
-            session["current_q"] += 1
-            return jsonify({
-                "session_id": session_id,
-                "question": question,
-                "progress": f"{session['current_q']}/{len(role_questions[role])}"
-            })
-        else:
-            session["phase"] = "final_qa"
-            # Only set this ONCE, when transitioning to final_qa
-            # session["final_qa_shown"] = False
-            return jsonify({
-                "session_id": session_id,
-                "score": min(session["score"], 100),
-                "message": "Interview completed! You can now ask the AI interviewer any question."
-            })
-    elif session["phase"] == "final_qa":
-        ai_reply = interviewer_response(msg)
+    if session["interview_done"]:
+        print(f"✅ Session completed: {session_id}")
         return jsonify({
             "session_id": session_id,
-            "ai_response": ai_reply
+            "message": "Interview completed!",
+            "details": list(zip(
+                session["asked"],
+                session["answers"],
+                session["scores"],
+                session["feedbacks"]
+            ))
         })
 
-@app.route('/')
-def home():
-    return jsonify({"message": "AI Interviewer API is running"})
+    if user_msg and session["current_index"] > 0:
+        score, feedback = evaluate_answer(user_msg)
+        session["answers"].append(user_msg)
+        session["scores"].append(score)
+        session["feedbacks"].append(feedback)
+        print(f"📊 Scored: {score}, Feedback: {feedback}")
+    else:
+        score, feedback = None, None
 
-if __name__ == '__main__':
+    if session["current_index"] < len(session["questions"]):
+        next_question = session["questions"][session["current_index"]]
+        session["asked"].append(next_question)
+        session["current_index"] += 1
+        
+        return jsonify({
+            "session_id": session_id,
+            "question": next_question,
+            "score": score,
+            "feedback": feedback,
+            "message": f"Your last answer scored {score}/100 — {feedback}." if score else ""
+        })
+    else:
+        session["interview_done"] = True
+        avg_score = sum(session["scores"]) / len(session["scores"]) if session["scores"] else 0
+        print(f"🎯 Final Score: {avg_score:.2f}")
+
+        return jsonify({
+            "session_id": session_id,
+            "score": round(avg_score, 1),
+            "message": f"Interview completed! Average score: {round(avg_score, 1)}",
+            "details": list(zip(
+                session["asked"],
+                session["answers"],
+                session["scores"],
+                session["feedbacks"]
+            ))
+        })
+
+if __name__ == "__main__":
     app.run(debug=True)
