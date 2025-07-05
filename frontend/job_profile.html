@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIVice - Select Your Role</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+body {
+    background: url("/static/images/image2.jpeg") no-repeat center center;
+    background-size: cover;
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 10, 30, 0.6);
+    z-index: 0;
+    pointer-events: none;
+}
+
+        .bg-particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: rgba(138, 43, 226, 0.5);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.7; }
+            50% { transform: translateY(-20px) rotate(180deg); opacity: 1; }
+        }
+
+        .header {
+            position: relative;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 5%;
+            backdrop-filter: blur(10px);
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #8A2BE2;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .logo:hover {
+            transform: scale(1.05);
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .hero {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            padding: 4rem 5% 2rem;
+        }
+
+        .hero-title {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #ffffff 0%, #8A2BE2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: slideInUp 0.8s ease-out;
+        }
+
+        .hero-subtitle {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 3rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            animation: slideInUp 0.8s ease-out 0.2s both;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .profiles-section {
+            position: relative;
+            z-index: 1;
+            padding: 2rem 5% 5rem;
+        }
+
+        .profiles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .profiles-grid > .profile-card:last-child {
+            justify-self: center;
+            max-width: 420px;
+        }
+
+        .profile-card {
+    background: rgba(20, 20, 40, 0.85);
+    backdrop-filter: blur(18px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 25px;
+    padding: 2.5rem;
+    transition: all 0.4s ease;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    animation: fadeInScale 0.6s ease-out;
+    box-shadow: 0 8px 32px 0 rgba(0,0,0,0.35);
+}
+
+        .profile-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(138, 43, 226, 0.1) 0%, rgba(255, 107, 107, 0.1) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
+        }
+
+        .profile-card:hover {
+            transform: translateY(-15px) scale(1.02);
+            box-shadow: 0 25px 50px rgba(138, 43, 226, 0.3);
+            border-color: rgba(138, 43, 226, 0.5);
+        }
+
+        .profile-card:hover::before {
+            opacity: 1;
+        }
+
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .profile-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #8A2BE2 0%, #FF6B6B 100%);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            font-size: 2rem;
+            transition: transform 0.3s ease;
+        }
+
+        .profile-card:hover .profile-icon {
+            transform: rotate(10deg) scale(1.1);
+        }
+
+        .profile-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-align: center;
+            color: white;
+        }
+
+        .profile-description {
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.6;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .profile-skills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+
+        .skill-tag {
+            background: rgba(138, 43, 226, 0.2);
+            border: 1px solid rgba(138, 43, 226, 0.4);
+            color: white;
+            padding: 0.4rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .profile-card:hover .skill-tag {
+            background: rgba(138, 43, 226, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .profile-stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #8A2BE2;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .start-interview-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #8A2BE2 0%, #FF6B6B 100%);
+            border: none;
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .start-interview-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #FF6B6B 0%, #8A2BE2 100%);
+            transition: left 0.3s ease;
+            z-index: -1;
+        }
+
+        .start-interview-btn:hover::before {
+            left: 0;
+        }
+
+        .start-interview-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(138, 43, 226, 0.4);
+        }
+
+        .difficulty {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+
+        .difficulty-label {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .difficulty-dots {
+            display: flex;
+            gap: 0.3rem;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .dot.active {
+            background: #8A2BE2;
+        }
+
+        .profile-card:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .profile-card:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .profile-card:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        .profile-card:nth-child(4) {
+            animation-delay: 0.4s;
+        }
+
+        .profile-card:nth-child(5) {
+            animation-delay: 0.5s;
+        }
+
+        .profile-card:nth-child(6) {
+            animation-delay: 0.6s;
+        }
+
+        @keyframes iconFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .profile-icon {
+            animation: iconFloat 3s ease-in-out infinite;
+        }
+
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2.2rem;
+            }
+
+            .profiles-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .profile-card {
+                padding: 2rem;
+            }
+
+            .header {
+                padding: 1rem 2%;
+            }
+
+            .hero, .profiles-section {
+                padding-left: 2%;
+                padding-right: 2%;
+            }
+        }
+
+        .glow-effect {
+            position: relative;
+        }
+
+        .glow-effect::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #8A2BE2, #FF6B6B, #8A2BE2);
+            border-radius: 25px;
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .profile-card:hover.glow-effect::after {
+            opacity: 0.7;
+            animation: rotate 2s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .profiles-grid > .profile-card:last-child {
+            justify-self: center;
+            max-width: 420px;
+        }
+
+        @media (min-width: 900px) {
+  .profiles-grid > .profile-card:last-child:nth-child(10) {
+    grid-column: 2 / 3;
+  }
+}
+    </style>
+</head>
+<body>
+    <div class="bg-particles" id="particles"></div>
+
+    <header class="header">
+        <div class="logo" onclick="goHome()">AIVice</div>
+        <a href="{{ url_for('index') }}" class="back-btn">← Back to Home</a>
+    </header>
+
+    <section class="hero">
+        <h1 class="hero-title">Choose Your Interview Path</h1>
+        <p class="hero-subtitle">
+            Select the role you're preparing for and let our AI interviewer assess your skills 
+            with personalized questions tailored to your chosen field.
+        </p>
+    </section>
+
+    <section class="profiles-section">
+        <div class="profiles-grid">
+            <div class="profile-card glow-effect" onclick="startInterview('software-engineer', event)">
+                <div class="profile-icon">💻</div>
+                <h3 class="profile-title">Software Engineer</h3>
+                <p class="profile-description">
+                    Assess your core software engineering skills including algorithms, data structures, and problem solving.
+                </p>
+                <div class="profile-skills">
+                    <span class="skill-tag">Algorithms</span>
+                    <span class="skill-tag">Data Structures</span>
+                    <span class="skill-tag">OOP</span>
+                    <span class="skill-tag">System Design</span>
+                    <span class="skill-tag">Coding</span>
+                </div>
+                <div class="profile-stats">
+                    <div class="stat">
+                        <span class="stat-number">10</span>
+                        <span class="stat-label">Questions</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">30</span>
+                        <span class="stat-label">Minutes</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">4.8</span>
+                        <span class="stat-label">Rating</span>
+                    </div>
+                </div>
+                <button class="start-interview-btn">Start Software Engineer Interview</button>
+            </div>
+
+            <div class="profile-card glow-effect" onclick="startInterview('data-scientist', event)">
+                <div class="profile-icon">📊</div>
+                <h3 class="profile-title">Data Scientist</h3>
+                <p class="profile-description">
+                    Evaluate your data science skills including statistics, data analysis, and machine learning.
+                </p>
+                <div class="profile-skills">
+                    <span class="skill-tag">Python</span>
+                    <span class="skill-tag">R</span>
+                    <span class="skill-tag">Pandas</span>
+                    <span class="skill-tag">Scikit-learn</span>
+                    <span class="skill-tag">SQL</span>
+                </div>
+                <div class="profile-stats">
+                    <div class="stat">
+                        <span class="stat-number">10</span>
+                        <span class="stat-label">Questions</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">30</span>
+                        <span class="stat-label">Minutes</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">4.6</span>
+                        <span class="stat-label">Rating</span>
+                    </div>
+                </div>
+                <button class="start-interview-btn">Start Data Scientist Interview</button>
+            </div>
+
+            <div class="profile-card glow-effect" onclick="startInterview('frontend', event)">
+                <div class="profile-icon">🎨</div>
+                <h3 class="profile-title">Frontend Developer</h3>
+                <p class="profile-description">
+                    Showcase your frontend skills with questions on JavaScript, React, CSS, and UX principles.
+                </p>
+                <div class="profile-skills">
+                    <span class="skill-tag">JavaScript</span>
+                    <span class="skill-tag">React</span>
+                    <span class="skill-tag">Vue.js</span>
+                    <span class="skill-tag">CSS3</span>
+                    <span class="skill-tag">HTML5</span>
+                </div>
+                <div class="profile-stats">
+                    <div class="stat">
+                        <span class="stat-number">10</span>
+                        <span class="stat-label">Questions</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">30</span>
+                        <span class="stat-label">Minutes</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">4.7</span>
+                        <span class="stat-label">Rating</span>
+                    </div>
+                </div>
+                <button class="start-interview-btn">Start Frontend Interview</button>
+            </div>
+
+            <div class="profile-card glow-effect" onclick="startInterview('backend', event)">
+                <div class="profile-icon">⚙</div>
+                <h3 class="profile-title">Backend Developer</h3>
+                <p class="profile-description">
+                    Demonstrate your backend expertise with questions on APIs, databases, and server-side tech.
+                </p>
+                <div class="profile-skills">
+                    <span class="skill-tag">Node.js</span>
+                    <span class="skill-tag">Python</span>
+                    <span class="skill-tag">PostgreSQL</span>
+                    <span class="skill-tag">MongoDB</span>
+                    <span class="skill-tag">REST APIs</span>
+                </div>
+                <div class="profile-stats">
+                    <div class="stat">
+                        <span class="stat-number">10</span>
+                        <span class="stat-label">Questions</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">30</span>
+                        <span class="stat-label">Minutes</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">4.9</span>
+                        <span class="stat-label">Rating</span>
+                    </div>
+                </div>
+                <button class="start-interview-btn">Start Backend Interview</button>
+            </div>
+
+            <div class="profile-card glow-effect" onclick="startInterview('ai-engineer', event)">
+                <div class="profile-icon">🤖</div>
+                <h3 class="profile-title">AI Engineer</h3>
+                <p class="profile-description">
+                    Test your knowledge in machine learning, deep learning, and AI system design.
+                </p>
+                <div class="profile-skills">
+                    <span class="skill-tag">Python</span>
+                    <span class="skill-tag">TensorFlow</span>
+                    <span class="skill-tag">PyTorch</span>
+                    <span class="skill-tag">Neural Networks</span>
+                    <span class="skill-tag">NLP</span>
+                </div>
+                <div class="profile-stats">
+                    <div class="stat">
+                        <span class="stat-number">10</span>
+                        <span class="stat-label">Questions</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">30</span>
+                        <span class="stat-label">Minutes</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">4.8</span>
+                        <span class="stat-label">Rating</span>
+                    </div>
+                </div>
+                <button class="start-interview-btn">Start AI Engineer Interview</button>
+            </div>
+
+            <div class="profile-card glow-effect" onclick="startInterview('devops', event)">
+                <div class="profile-icon">🔧</div>
+                <h3 class="profile-title">DevOps Engineer</h3>
+                <p class="profile-description">
+                    Test your DevOps knowledge including CI/CD, containerization, and cloud platforms.
+                </p>
+                <div class="profile-skills">
+                    <span class="skill-tag">Docker</span>
+                    <span class="skill-tag">Kubernetes</span>
+                    <span class="skill-tag">AWS</span>
+                    <span class="skill-tag">Jenkins</span>
+                    <span class="skill-tag">Terraform</span>
+                </div>
+                <div class="profile-stats">
+                    <div class="stat">
+                        <span class="stat-number">10</span>
+                        <span class="stat-label">Questions</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">30</span>
+                        <span class="stat-label">Minutes</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">4.7</span>
+                        <span class="stat-label">Rating</span>
+                    </div>
+                </div>
+                <button class="start-interview-btn">Start DevOps Interview</button>
+            </div>
+
+            <div class="profile-card glow-effect" onclick="startInterview('ux-designer', event)">
+                <div class="profile-icon">🎯</div>
+                <h3 class="profile-title">UX Designer</h3>
+                <p class="profile-description">
+                    Assess your UX design skills including user research, wireframing, and usability testing.
+                </p>
+                <div class="profile-skills">
+                    <span class="skill-tag">Wireframing</span>
+                    <span class="skill-tag">Prototyping</span>
+                    <span class="skill-tag">User Research</span>
+                    <span class="skill-tag">Figma</span>
+                    <span class="skill-tag">Usability</span>
+                </div>
+                <div class="profile-stats">
+                    <div class="stat">
+                        <span class="stat-number">10</span>
+                        <span class="stat-label">Questions</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">30</span>
+                        <span class="stat-label">Minutes</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">4.5</span>
+                        <span class="stat-label">Rating</span>
+                    </div>
+                </div>
+                <button class="start-interview-btn">Start UX Designer Interview</button>
+            </div>
+
+            <div class="profile-card glow-effect" onclick="startInterview('cybersecurity-analyst', event)">
+                <div class="profile-icon">🛡</div>
+                <h3 class="profile-title">Cybersecurity Analyst</h3>
+                <p class="profile-description">
+                    Test your cybersecurity skills including threat analysis, network security, and incident response.
+                </p>
+                <div class="profile-skills">
+                    <span class="skill-tag">Network Security</span>
+                    <span class="skill-tag">Threat Analysis</span>
+                    <span class="skill-tag">SIEM</span>
+                    <span class="skill-tag">Incident Response</span>
+                    <span class="skill-tag">Encryption</span>
+                </div>
+                <div class="profile-stats">
+                    <div class="stat">
+                        <span class="stat-number">10</span>
+                        <span class="stat-label">Questions</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">30</span>
+                        <span class="stat-label">Minutes</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">4.6</span>
+                        <span class="stat-label">Rating</span>
+                    </div>
+                </div>
+                <button class="start-interview-btn">Start Cybersecurity Interview</button>
+            </div>
+
+            <div class="profile-card glow-effect" onclick="startInterview('cloud-architect', event)">
+                <div class="profile-icon">☁</div>
+                <h3 class="profile-title">Cloud Architect</h3>
+                <p class="profile-description">
+                    Assess your cloud architecture skills including AWS, Azure, GCP, and cloud security.
+                </p>
+                <div class="profile-skills">
+                    <span class="skill-tag">AWS</span>
+                    <span class="skill-tag">Azure</span>
+                    <span class="skill-tag">GCP</span>
+                    <span class="skill-tag">Cloud Security</span>
+                    <span class="skill-tag">DevOps</span>
+                </div>
+                <div class="profile-stats">
+                    <div class="stat">
+                        <span class="stat-number">10</span>
+                        <span class="stat-label">Questions</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">30</span>
+                        <span class="stat-label">Minutes</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">4.7</span>
+                        <span class="stat-label">Rating</span>
+                    </div>
+                </div>
+                <button class="start-interview-btn">Start Cloud Architect Interview</button>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            const particleCount = 60;
+
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 6 + 's';
+                particle.style.animationDuration = (Math.random() * 4 + 4) + 's';
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        function goHome() {
+            alert('🏠 Navigating back to homepage...');
+            window.location.href = 'index.html';
+        }
+
+        function goBack() {
+            alert('⬅ Going back to homepage...');
+            history.back();
+        }
+
+        function startInterview(role, event) {
+            const roleNames = {
+                'software-engineer': 'Software Engineer',
+                'data-scientist': 'Data Scientist',
+                'product-manager': 'Product Manager',
+                'frontend': 'Frontend Developer',
+                'backend': 'Backend Developer',
+                'ai-engineer': 'AI Engineer',
+                'devops': 'DevOps Engineer',
+                'ux-designer': 'UX Designer',
+                'cybersecurity-analyst': 'Cybersecurity Analyst',
+                'cloud-architect': 'Cloud Architect'
+            };
+
+            const clickedCard = event.currentTarget;
+            const btn = clickedCard.querySelector('.start-interview-btn');
+            const originalText = btn.textContent;
+
+            btn.textContent = 'Preparing Interview...';
+            btn.style.background = 'linear-gradient(135deg, #FF6B6B 0%, #8A2BE2 100%)';
+
+            setTimeout(() => {
+                window.location.href = interviewbot.html?role=${role};
+            }, 2000);
+        }
+
+        function handleScroll() {
+            const cards = document.querySelectorAll('.profile-card');
+            cards.forEach((card) => {
+                const cardTop = card.getBoundingClientRect().top;
+                const cardBottom = card.getBoundingClientRect().bottom;
+
+                if (cardTop < window.innerHeight && cardBottom > 0) {
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0) scale(1)';
+                } else {
+                    card.style.opacity = '0.7';
+                    card.style.transform = 'translateY(30px) scale(0.95)';
+                }
+            });
+        }
+
+        function initializeAnimations() {
+            const cards = document.querySelectorAll('.profile-card');
+            cards.forEach(card => {
+                card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            });
+        }
+
+        function addHoverEffects() {
+            const cards = document.querySelectorAll('.profile-card');
+
+            cards.forEach(card => {
+                card.addEventListener('mouseenter', function () {
+                    this.style.boxShadow = '0 30px 60px rgba(138, 43, 226, 0.4), 0 0 50px rgba(255, 107, 107, 0.2)';
+
+                    const skillTags = this.querySelectorAll('.skill-tag');
+                    skillTags.forEach((tag, index) => {
+                        setTimeout(() => {
+                            tag.style.transform = 'translateY(-3px) scale(1.05)';
+                        }, index * 50);
+                    });
+                });
+
+                card.addEventListener('mouseleave', function () {
+                    this.style.boxShadow = '';
+
+                    const skillTags = this.querySelectorAll('.skill-tag');
+                    skillTags.forEach(tag => {
+                        tag.style.transform = '';
+                    });
+                });
+            });
+        }
+
+        function animateStats() {
+            const statNumbers = document.querySelectorAll('.stat-number');
+
+            statNumbers.forEach(stat => {
+                const targetValue = parseFloat(stat.textContent);
+                const isDecimal = stat.textContent.includes('.');
+                let currentValue = 0;
+                const increment = targetValue / 50;
+
+                const timer = setInterval(() => {
+                    currentValue += increment;
+                    if (currentValue >= targetValue) {
+                        stat.textContent = isDecimal ? targetValue.toFixed(1) : targetValue;
+                        clearInterval(timer);
+                    } else {
+                        stat.textContent = isDecimal ? currentValue.toFixed(1) : Math.floor(currentValue);
+                    }
+                }, 20);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            createParticles();
+            initializeAnimations();
+            addHoverEffects();
+            animateStats();
+
+            window.addEventListener('scroll', handleScroll);
+            handleScroll();
+        });
+
+        document.querySelector('.logo').addEventListener('click', () => {
+            alert('🏠 Navigating back to homepage...');
+            window.location.href = 'index.html';
+        });
+    </script>
+</body>
+</html>
