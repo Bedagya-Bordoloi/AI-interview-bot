@@ -82,7 +82,7 @@ The score evaluation model uses a **FINE-TUNED DISTILBERT MODEL** to assess answ
 
 ## 👥 Contributors
 
-- [Krishanu](https://github.com/Krishanu)
+- [Krishanu](https://github.com/krishanudeka)
 - [Bedagya-Bordoloi](https://github.com/Bedagya-Bordoloi)
 
 ## 🔮 Future Enhancements
